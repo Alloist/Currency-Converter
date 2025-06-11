@@ -14,12 +14,11 @@ struct MainConverterView: View {
     @State private var saleCurrencyValue: Double? = nil
     @State private var buyCurrencyValue: Double? = nil
     
-    
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
                 VStack(spacing: 8) {
-                    Image("converterLogo")
+                    Image("Logo")
                         .onAppear {
                             viewModel.didLoad()
                         }
@@ -38,8 +37,8 @@ struct MainConverterView: View {
                                 .padding(.leading)
                             CCTextField(model: TextFieldCurrencyModel(placeholder: "Your sale",
                                                                       value: $saleCurrencyValue,
-                                                                      systemImageName: "arrowshape.turn.up.forward",
-                                                                      currencySymbol: viewModel.saleCurrency?.symbol ?? "",
+                                                                      systemImageName: AppSystemImages.saleIcon.rawValue,
+                                                                      currencySymbol: viewModel.saleCurrency?.symbolNative ?? "",
                                                                       currencyCode: viewModel.saleCurrency?.code ?? "")
                             )
                             .padding(.leading, -8)
@@ -53,7 +52,7 @@ struct MainConverterView: View {
                             viewModel.swapCurrencies()
                             debugPrint("swap currency")
                         }) {
-                            Image(systemName: "arrow.up.arrow.down.circle")
+                            Image(systemName: AppSystemImages.swapIcon.rawValue)
                                 .resizable()
                                 .tint(Color.cyan)
                         }
@@ -77,8 +76,8 @@ struct MainConverterView: View {
                             
                             CCTextField(model: TextFieldCurrencyModel(placeholder: "Your recieve",
                                                                       value: $buyCurrencyValue,
-                                                                      systemImageName: "arrowshape.turn.up.backward",
-                                                                      currencySymbol: viewModel.buyCurrency?.symbol ?? "",
+                                                                      systemImageName: AppSystemImages.buyIcon.rawValue,
+                                                                      currencySymbol: viewModel.buyCurrency?.symbolNative ?? "",
                                                                       currencyCode: viewModel.buyCurrency?.code ?? "")
                             )
                             .padding(.leading, -8)

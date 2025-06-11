@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum SupportedCurrencyCode: String, CaseIterable {
+enum SupportedCurrencyCode: String, CaseIterable, Codable {
     case rub = "RUB"
     case usd = "USD"
     case eur = "EUR"
@@ -25,5 +25,4 @@ enum SupportedCurrencyCode: String, CaseIterable {
         case .cny: return "Chinese Yuan"
         }
     }
-    
 }

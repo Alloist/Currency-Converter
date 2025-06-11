@@ -35,7 +35,7 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
     }
     
     func didLoad() {
-        guard isLoading else { return }
+        guard !isLoading else { return }
         self.saleCurrency = rubModel()
         self.buyCurrency = usdModel()
     }
@@ -56,7 +56,6 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
         let intermediateModel = saleCurrency
         saleCurrency = buyCurrency
         buyCurrency = intermediateModel
-        debugPrint(#function)
     }
     
 }
