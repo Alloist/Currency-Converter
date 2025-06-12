@@ -1,5 +1,5 @@
 //
-//  CurrencyModel.swift
+//  CurrencyResponseModel.swift
 //  CurrencyConverter
 //
 //  Created by Aliaksei Gorodji on 11.06.25.
@@ -7,7 +7,12 @@
 
 import Foundation
 
-struct CurrencyModel: Codable, Hashable {
+struct CurrencyResponseData: Codable {
+    let data: [String: CurrencyResponseModel]
+}
+
+struct CurrencyResponseModel: Codable, Hashable, Identifiable {
+    let id = UUID().uuidString
     let symbol: String
     let name: String
     let symbolNative: String

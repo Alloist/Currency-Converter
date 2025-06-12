@@ -29,10 +29,11 @@ struct NetworkRequest {
             throw ErrorList.invalidURL
         }
         var request = URLRequest(url: url)
+        
         request.httpMethod = method.rawValue
         if let body {
             do {
-                request.httpBody = try JSONEncoder().encode(body)
+                request.httpBody = try JSONEncoder().encode(body) 
             } catch {
                 debugPrint(error)
                 throw error

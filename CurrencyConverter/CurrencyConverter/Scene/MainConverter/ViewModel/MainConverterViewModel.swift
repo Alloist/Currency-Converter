@@ -10,76 +10,88 @@ import Combine
 import SwiftUI
 
 protocol MainConverterViewModelProtocol {
-    var saleCurrency: CurrencyModel? { get }
-    var buyCurrency: CurrencyModel? { get }
-    var allCurrency: [CurrencyModel] { get }
+    var sellCurrency: CurrencyResponseModel? { get }
+    var buyCurrency: CurrencyResponseModel? { get }
+    var availableСurrencies: [CurrencyResponseModel] { get }
+    var isLoading: Bool { get }
+    var isShownCurrencyList: Bool { get }
     
-    func didLoad()
-    func getAllCurrencyList()
-    func selectSaleCurrency(_ currency: CurrencyModel)
-    func selectBuyCurrency(_ currency: CurrencyModel)
+    var exchangeType: ExchangeType { get }
+    var exchangeRate: String { get }
+    
+    func showCurrencyList(for: ExchangeType)
     func swapCurrencies()
 }
 
-
 final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableObject {
     
-    @Published var saleCurrency: CurrencyModel?
-    @Published var buyCurrency: CurrencyModel?
-    @Published var allCurrency: [CurrencyModel] = []
+    private var useCase: MainConverterUseCaseProtocol
+    private var isLoaded: Bool = false
     
-    private var isLoading: Bool = false
+    var exchangeType: ExchangeType = .sell
     
-    init() {
+    @Published var sellCurrency: CurrencyResponseModel?
+    @Published var buyCurrency: CurrencyResponseModel?
+    
+    @Published var error: Error?
+    @Published var isLoading: Bool = false
+    @Published var isShownCurrencyList: Bool = false
+    
+    @Published var exchangeRate: String = ""
         
+    private var cancellables = Set<AnyCancellable>()
+    
+    var availableСurrencies: [CurrencyResponseModel] {
+        get {
+            var selectedCurrencies: [CurrencyResponseModel] = []
+            if let sellCurrency = sellCurrency {
+                selectedCurrencies.append(sellCurrency)
+            }
+            if let buyCurrency = buyCurrency {
+                selectedCurrencies.append(buyCurrency)
+            }
+            return useCase.allCurrency.filter{ !selectedCurrencies.contains($0) }
+        }
+    }
+    
+    init(useCase: MainConverterUseCaseProtocol) {
+        self.useCase = useCase
     }
     
     func didLoad() {
-        guard !isLoading else { return }
-        self.saleCurrency = rubModel()
-        self.buyCurrency = usdModel()
+        guard !isLoaded else { return }
+        useCase.getAllCurrencies { [weak self] in
+            self?.isLoading = false
+            self?.isShownCurrencyList = true
+        }
     }
     
-    func getAllCurrencyList() {
-        
+    func showCurrencyList(for type: ExchangeType) {
+        exchangeType = type
+        isShownCurrencyList = true
     }
     
-    func selectSaleCurrency(_ currency: CurrencyModel) {
+    func didSelectModel(code: String) {
+        isShownCurrencyList = false
+        guard let item = useCase.allCurrency.first(where: { $0.code == code })
+        else {
+            print(#function, "Cannot find currency with code: \(code)")
+            return
+        }
         
-    }
-    
-    func selectBuyCurrency(_ currency: CurrencyModel) {
-        
+        switch exchangeType {
+        case .sell:
+            self.sellCurrency = item
+        case .buy:
+            self.buyCurrency = item
+            
+        }
     }
     
     func swapCurrencies() {
-        let intermediateModel = saleCurrency
-        saleCurrency = buyCurrency
+        let intermediateModel = sellCurrency
+        sellCurrency = buyCurrency
         buyCurrency = intermediateModel
     }
     
-}
-
-private extension MainConverterViewModel {
-    func usdModel() -> CurrencyModel {
-        .init(symbol: "$",
-              name: "US Dollar",
-              symbolNative: "$",
-              decimalDigits: 2,
-              rounding: 0,
-              code: "USD",
-              namePlural: "US dollars",
-              type: "fiat")
-    }
-    
-    func rubModel() -> CurrencyModel {
-        .init(symbol: "RUB",
-              name: "Russian Ruble",
-              symbolNative: "руб.",
-              decimalDigits: 2,
-              rounding: 0,
-              code: "RUB",
-              namePlural: "Russian ruble",
-              type: "fiat")
-    }
 }

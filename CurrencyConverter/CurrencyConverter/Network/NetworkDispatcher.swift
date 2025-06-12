@@ -9,6 +9,8 @@ import Foundation
 import Combine
 
 enum ErrorList: Error {
+    case custom(message: String)
+    
     case invalidURL
     case urlSessionFailed
     case noData
@@ -39,7 +41,7 @@ struct URLSessionNetworkDispatcher: NetworkDispatcher {
                 guard output.response is HTTPURLResponse else {
                     throw ErrorList.unknownServerError
                 }
-                debugPrint(String(data: output.data, encoding: .utf8)!)
+//                debugPrint(String(data: output.data, encoding: .utf8)!)
                 return output.data
             }
             .decode(type: T.self, decoder: JSONDecoder())

@@ -9,9 +9,8 @@ import Foundation
 
 enum APIConstants: String {
     
-    case apiKey = <#Your API Key#>
+    case apiKey = "fca_live_2TcrD1ook8HrqNygypV6wynCStBKwqnfslMhKhOt"
     
-    case baseURLString = "https://api.freecurrencyapi.com/v1"
-    case currency = "https://api.freecurrencyapi.com/v1/currency"
-    case latest = "https://api.freecurrencyapi.com/v1/latest"
+    case currencies = "https://api.freecurrencyapi.com/v1/currencies?apikey=%@&currencies=%@"
+    case latest = "https://api.freecurrencyapi.com/v1/latest?apikey=%@&currencies=%@"
 }

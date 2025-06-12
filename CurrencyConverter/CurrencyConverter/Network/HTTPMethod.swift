@@ -18,7 +18,6 @@ enum HTTPMethod: String {
 enum HTTPConstants {
     enum Headers {
         enum Keys {
-            static let apikey = "apikey"
             static let contentType = "Content-type"
         }
         enum Values {

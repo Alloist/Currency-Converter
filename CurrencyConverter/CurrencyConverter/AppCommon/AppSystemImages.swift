@@ -8,7 +8,8 @@
 import Foundation
 
 enum AppSystemImages: String {
-    case saleIcon = "arrowshape.turn.up.forward"
+    case sellIcon = "arrowshape.turn.up.forward"
     case buyIcon = "arrowshape.turn.up.backward"
     case swapIcon = "arrow.up.arrow.down.circle"
+    case addCurrencyIcon = "plus.circle.dashed"
 }
