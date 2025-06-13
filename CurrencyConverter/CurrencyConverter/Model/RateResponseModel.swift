@@ -9,7 +9,7 @@ import Foundation
 
 
 struct RateResponseData: Codable {
-    let data: [String: RateResponseModel]
+    let data: [String: Double]
 }
 
 

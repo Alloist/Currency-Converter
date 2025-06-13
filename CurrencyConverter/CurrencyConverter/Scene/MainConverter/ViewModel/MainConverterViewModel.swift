@@ -6,13 +6,12 @@
 //
 
 import Foundation
-import Combine
 import SwiftUI
 
 protocol MainConverterViewModelProtocol {
-    var sellCurrency: CurrencyResponseModel? { get }
-    var buyCurrency: CurrencyResponseModel? { get }
-    var availableСurrencies: [CurrencyResponseModel] { get }
+    var sellCurrency: CurrencyModel? { get }
+    var buyCurrency: CurrencyModel? { get }
+    var availableСurrencies: [CurrencyModel] { get }
     var isLoading: Bool { get }
     var isShownCurrencyList: Bool { get }
     
@@ -30,39 +29,49 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
     
     var exchangeType: ExchangeType = .sell
     
-    @Published var sellCurrency: CurrencyResponseModel?
-    @Published var buyCurrency: CurrencyResponseModel?
+    @Published var sellCurrency: CurrencyModel?
+    @Published var buyCurrency: CurrencyModel?
     
     @Published var error: Error?
-    @Published var isLoading: Bool = false
+    @Published var isLoading: Bool = true
     @Published var isShownCurrencyList: Bool = false
     
     @Published var exchangeRate: String = ""
-        
-    private var cancellables = Set<AnyCancellable>()
     
-    var availableСurrencies: [CurrencyResponseModel] {
+    var availableСurrencies: [CurrencyModel] {
         get {
-            var selectedCurrencies: [CurrencyResponseModel] = []
+            var selectedID: [String] = []
             if let sellCurrency = sellCurrency {
-                selectedCurrencies.append(sellCurrency)
+                selectedID.append(sellCurrency.id)
             }
             if let buyCurrency = buyCurrency {
-                selectedCurrencies.append(buyCurrency)
+                selectedID.append(buyCurrency.id)
             }
-            return useCase.allCurrency.filter{ !selectedCurrencies.contains($0) }
+            
+            return useCase.allCurrencies.filter{ !selectedID.contains($0.id) }
         }
     }
     
+    //MARK: Init
     init(useCase: MainConverterUseCaseProtocol) {
         self.useCase = useCase
     }
     
     func didLoad() {
+        self.isLoading = true
         guard !isLoaded else { return }
-        useCase.getAllCurrencies { [weak self] in
-            self?.isLoading = false
-            self?.isShownCurrencyList = true
+        
+        Task(priority: .userInitiated) {
+            do {
+                try await self.useCase.getAppData()
+            } catch {
+                //TODO: Handle Error state
+                debugPrint(error.localizedDescription)
+            }
+            await MainActor.run {
+                self.isLoading = false
+                self.isShownCurrencyList = true
+            }
         }
     }
     
@@ -73,8 +82,9 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
     
     func didSelectModel(code: String) {
         isShownCurrencyList = false
-        guard let item = useCase.allCurrency.first(where: { $0.code == code })
+        guard let item = useCase.allCurrencies.first(where: { $0.model.code == code })
         else {
+            //TODO: Handle Error state
             print(#function, "Cannot find currency with code: \(code)")
             return
         }
@@ -84,8 +94,9 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
             self.sellCurrency = item
         case .buy:
             self.buyCurrency = item
-            
         }
+        
+        prepareExchangeRate()
     }
     
     func swapCurrencies() {
@@ -94,4 +105,17 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
         buyCurrency = intermediateModel
     }
     
+}
+
+
+private extension MainConverterViewModel {
+    
+    func prepareExchangeRate() {
+        guard let sellCurrency = sellCurrency,
+        let buyCurrency = buyCurrency,
+        let rate = sellCurrency.rate[buyCurrency.model.code] else {
+            return
+        }
+        exchangeRate = "1 \(sellCurrency.model.symbolNative) = \(rate) \(buyCurrency.model.symbolNative)"
+    }
 }

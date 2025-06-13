@@ -7,8 +7,8 @@
 
 import Foundation
 
-struct CurrencyModel: Codable {
+struct CurrencyModel: Codable, Hashable {
     var id = UUID().uuidString
     let model: CurrencyResponseModel
-    let rate: [RateResponseModel]
+    let rate: [String: Double]
 }

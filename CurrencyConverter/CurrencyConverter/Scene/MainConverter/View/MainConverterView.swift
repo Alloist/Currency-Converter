@@ -37,7 +37,7 @@ struct MainConverterView: View {
                         VStack(spacing: 0) {
                             HStack(spacing: 0) {
                                 Spacer()
-                                Text(viewModel.sellCurrency?.name ?? "")
+                                Text(viewModel.sellCurrency?.model.name ?? "")
                                     .font(.system(size: 16))
                                     .padding(.trailing)
                             }
@@ -52,7 +52,7 @@ struct MainConverterView: View {
                                             .tint(.cyan)
                                             .frame(width: 32, height: 32)
                                     }
-                                    Text(viewModel.sellCurrency?.code ?? "")
+                                    Text(viewModel.sellCurrency?.model.code ?? "")
                                         .foregroundStyle(.black)
                                         .font(.system(size: 20))
                                 }
@@ -62,8 +62,8 @@ struct MainConverterView: View {
                                 CCTextField(model: TextFieldCurrencyModel(placeholder: "Your sell",
                                                                           value: $sellCurrencyValue,
                                                                           systemImageName: AppSystemImages.sellIcon.rawValue,
-                                                                          currencySymbol: viewModel.sellCurrency?.symbolNative ?? "",
-                                                                          currencyCode: viewModel.sellCurrency?.code ?? "")
+                                                                          currencySymbol: viewModel.sellCurrency?.model.symbolNative ?? "",
+                                                                          currencyCode: viewModel.sellCurrency?.model.code ?? "")
                                 )
                                 .padding(.leading, -8)
                             }
@@ -104,7 +104,7 @@ struct MainConverterView: View {
                                             .tint(.cyan)
                                             .frame(width: 32, height: 32)
                                     }
-                                    Text(viewModel.buyCurrency?.code ?? "")
+                                    Text(viewModel.buyCurrency?.model.code ?? "")
                                         .foregroundStyle(.black)
                                         .font(.system(size: 20))
                                 }
@@ -114,30 +114,31 @@ struct MainConverterView: View {
                                 CCTextField(model: TextFieldCurrencyModel(placeholder: "Your recieve",
                                                                           value: $buyCurrencyValue,
                                                                           systemImageName: AppSystemImages.buyIcon.rawValue,
-                                                                          currencySymbol: viewModel.buyCurrency?.symbolNative ?? "",
-                                                                          currencyCode: viewModel.buyCurrency?.code ?? "")
+                                                                          currencySymbol: viewModel.buyCurrency?.model.symbolNative ?? "",
+                                                                          currencyCode: viewModel.buyCurrency?.model.code ?? "")
                                 )
                                 .padding(.leading, -8)
                             }
                             
                             HStack(spacing: 0) {
                                 Spacer()
-                                Text(viewModel.buyCurrency?.namePlural ?? "")
+                                Text(viewModel.buyCurrency?.model.namePlural ?? "")
                                     .font(.system(size: 16))
                                     .padding(.trailing)
                             }
                         }
                         
                         Spacer()
+                        //TODO: Set the correct date
                         Text("Current rate as of 13:22 | 24.06.2025")
                     }
                 }
             }
             .sheet(isPresented: $viewModel.isShownCurrencyList) {
                 List(viewModel.availableСurrencies, id: \.self,) {
-                    CurrencyRowView(code: $0.code,
-                                    symbol: $0.symbolNative,
-                                    name: $0.name) { code in
+                    CurrencyRowView(code: $0.model.code,
+                                    symbol: $0.model.symbolNative,
+                                    name: $0.model.name) { code in
                         viewModel.didSelectModel(code: code)
                     }
                 }

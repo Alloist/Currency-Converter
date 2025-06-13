@@ -6,16 +6,17 @@
 //
 
 import Foundation
-import Combine
 
-protocol CyrrencuNetworkProtocol {
-    func getCurrencies() -> AnyPublisher<CurrencyResponseData, Error>
-    func getExchangeRate(from code: String) //-> AnyPublisher<RateResponseData, Error>
+protocol CurrencyNetworkProtocol {
+    /// return 'async throws -> CurrencyResponseData'
+    func getCurrencies() async throws -> CurrencyResponseData
+    /// return  'async throws -> RateResponseData'
+    func getExchangeRate(from code: String) async throws -> RateResponseData
 }
 
-final class CurrencyNetworkManager: CyrrencuNetworkProtocol {
+final class CurrencyNetworkManager: CurrencyNetworkProtocol {
     
-    func getCurrencies() -> AnyPublisher<CurrencyResponseData, Error> {
+    func getCurrencies() async throws -> CurrencyResponseData {
         let headers = [HTTPConstants.Headers.Keys.contentType: HTTPConstants.Headers.Values.applicationJSON]
         
         let urlString = String(format: APIConstants.currencies.rawValue,
@@ -26,10 +27,12 @@ final class CurrencyNetworkManager: CyrrencuNetworkProtocol {
                                      method: .get,
                                      body: nil,
                                      headers: headers)
-        return URLSessionNetworkDispatcher.dispatch(request: request)
+        
+        return try await URLSessionNetworkDispatcher.dispatch(request: request)
     }
     
-    func getExchangeRate(from code: String) {
+    /// return  'async throws -> RateResponseData'
+    func getExchangeRate(from code: String) async throws -> RateResponseData {
         let headers = [HTTPConstants.Headers.Keys.contentType: HTTPConstants.Headers.Values.applicationJSON]
         
         var outOffArray = SupportedCurrencyCode.allCases
@@ -39,9 +42,17 @@ final class CurrencyNetworkManager: CyrrencuNetworkProtocol {
             outOffArray.remove(at: index)
         }
         
-        let urlString = String(format: APIConstants.currencies.rawValue,
+        let urlString = String(format: APIConstants.latest.rawValue,
                                APIConstants.apiKey.rawValue,
-                               outOffArray.map(\.rawValue).joined(separator: ","))
+                               outOffArray.map(\.rawValue).joined(separator: ","),
+                               code.uppercased())
         
+        let request = NetworkRequest(urlString: urlString,
+                                     method: .get,
+                                     body: nil,
+                                     headers: headers)
+        
+        return try await URLSessionNetworkDispatcher.dispatch(request: request)
     }
+    
 }

@@ -51,4 +51,21 @@ struct URLSessionNetworkDispatcher: NetworkDispatcher {
             .eraseToAnyPublisher()
     }
     
+    static func dispatch<T>(request: NetworkRequest) async throws -> T where T: Codable {
+        
+        var urlRequest: URLRequest
+        
+        do {
+            urlRequest = try request.getUrlRequest()
+        } catch {
+           throw error
+        }
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        guard response is HTTPURLResponse else {
+            throw ErrorList.unknownServerError
+        }
+        return try JSONDecoder().decode(T.self, from: data)
+    }
+    
 }
