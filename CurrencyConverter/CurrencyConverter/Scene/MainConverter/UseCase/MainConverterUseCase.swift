@@ -17,7 +17,7 @@ protocol MainConverterUseCaseProtocol {
 
 final class MainConverterUseCase: MainConverterUseCaseProtocol, ObservableObject {
     
-    private let networkManager: CyrrencuNetworkProtocol
+    private let networkManager: CurrencyNetworkProtocol
     
     var allCurrencies: [CurrencyModel] = []
     private var responseCurrencies: [CurrencyResponseModel] = []
@@ -25,7 +25,7 @@ final class MainConverterUseCase: MainConverterUseCaseProtocol, ObservableObject
     private var cancelBag: Set<AnyCancellable> = []
     
     
-    init(networkManager: CyrrencuNetworkProtocol) {
+    init(networkManager: CurrencyNetworkProtocol) {
         self.networkManager = networkManager
     }
     

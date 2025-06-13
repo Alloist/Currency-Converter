@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 protocol MainConverterViewModelProtocol {
     var sellCurrency: CurrencyModel? { get }
@@ -14,11 +15,14 @@ protocol MainConverterViewModelProtocol {
     var availableСurrencies: [CurrencyModel] { get }
     var isLoading: Bool { get }
     var isShownCurrencyList: Bool { get }
-    
+    var sellAmount: Double? { get }
+    var buyAmount: Double? { get }
     var exchangeType: ExchangeType { get }
     var exchangeRate: String { get }
     
+    func didLoad()
     func showCurrencyList(for: ExchangeType)
+    func didSelectModel(code: String)
     func swapCurrencies()
 }
 
@@ -27,10 +31,17 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
     private var useCase: MainConverterUseCaseProtocol
     private var isLoaded: Bool = false
     
+    private var cancelBag: Set<AnyCancellable> = []
+    
     var exchangeType: ExchangeType = .sell
     
     @Published var sellCurrency: CurrencyModel?
     @Published var buyCurrency: CurrencyModel?
+    @Published var sellAmount: Double?
+    @Published var buyAmount: Double?
+    
+    private var debouncedSellAmount: Double?
+    private var debouncedBuyAmount: Double?
     
     @Published var error: Error?
     @Published var isLoading: Bool = true
@@ -55,6 +66,39 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
     //MARK: Init
     init(useCase: MainConverterUseCaseProtocol) {
         self.useCase = useCase
+        setupDebounce()
+    }
+    
+    private func setupDebounce() {
+        debouncedSellAmount = sellAmount
+        debouncedBuyAmount = buyAmount
+        
+        $sellAmount
+            .debounce(for: .seconds(0.75), scheduler: RunLoop.main)
+            .sink{ [weak self] value in
+                if value != self?.debouncedSellAmount {
+                    let calculation = self?.calcualteAmount(type: .sell)
+                    
+                    self?.buyAmount = calculation
+                    self?.debouncedBuyAmount = calculation
+                    return
+                }
+                self?.sellAmount = value
+            }
+            .store(in: &cancelBag)
+        
+        $buyAmount
+            .debounce(for: .seconds(0.75), scheduler: RunLoop.main)
+            .sink {[weak self] value in
+                if value != self?.debouncedBuyAmount {
+                    let calculation = self?.calcualteAmount(type: .buy)
+                    self?.sellAmount = calculation
+                    self?.debouncedSellAmount = calculation
+                    return
+                }
+                self?.buyAmount = value
+            }
+            .store(in: &cancelBag)
     }
     
     func didLoad() {
@@ -103,6 +147,7 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
         let intermediateModel = sellCurrency
         sellCurrency = buyCurrency
         buyCurrency = intermediateModel
+        prepareExchangeRate()
     }
     
 }
@@ -112,10 +157,37 @@ private extension MainConverterViewModel {
     
     func prepareExchangeRate() {
         guard let sellCurrency = sellCurrency,
-        let buyCurrency = buyCurrency,
-        let rate = sellCurrency.rate[buyCurrency.model.code] else {
+              let buyCurrency = buyCurrency,
+              let rate = sellCurrency.rate[buyCurrency.model.code] else {
             return
         }
         exchangeRate = "1 \(sellCurrency.model.symbolNative) = \(rate) \(buyCurrency.model.symbolNative)"
     }
+    
+    func calcualteAmount(type: ExchangeType) -> Double? {
+        switch type {
+        case .buy:
+            guard let amount = buyAmount,
+                  let sellCurrency = sellCurrency,
+                  let buyCurrency = buyCurrency,
+                  let rate = buyCurrency.rate[sellCurrency.model.code] else {
+                return nil
+            }
+            
+            return (amount / rate)
+            
+        case .sell:
+            guard let amount = sellAmount,
+                  let sellCurrency = sellCurrency,
+                  let buyCurrency = buyCurrency,
+                  let rate = sellCurrency.rate[buyCurrency.model.code] else {
+                return nil
+            }
+            
+            return (amount * rate)
+        }
+        
+        //TODO: save exchange pair to history
+    }
+    
 }
