@@ -74,7 +74,7 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
         debouncedBuyAmount = buyAmount
         
         $sellAmount
-            .debounce(for: .seconds(0.75), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink{ [weak self] value in
                 if value != self?.debouncedSellAmount {
                     let calculation = self?.calcualteAmount(type: .sell)
@@ -88,7 +88,7 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
             .store(in: &cancelBag)
         
         $buyAmount
-            .debounce(for: .seconds(0.75), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink {[weak self] value in
                 if value != self?.debouncedBuyAmount {
                     let calculation = self?.calcualteAmount(type: .buy)
@@ -147,6 +147,8 @@ final class MainConverterViewModel: MainConverterViewModelProtocol, ObservableOb
         let intermediateModel = sellCurrency
         sellCurrency = buyCurrency
         buyCurrency = intermediateModel
+        let value = buyAmount
+        sellAmount = value
         prepareExchangeRate()
     }
     

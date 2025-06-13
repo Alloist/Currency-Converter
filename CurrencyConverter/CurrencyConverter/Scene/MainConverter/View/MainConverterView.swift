@@ -33,6 +33,9 @@ struct MainConverterView: View {
                 } else {
                     VStack(spacing: 8) {
                         Image("Logo")
+                            .onTapGesture {
+                                hideKeyboard()
+                            }
                         //Sell
                         VStack(spacing: 0) {
                             HStack(spacing: 0) {
@@ -64,91 +67,96 @@ struct MainConverterView: View {
                                                                           systemImageName: AppSystemImages.sellIcon.rawValue,
                                                                           currencySymbol: viewModel.sellCurrency?.model.symbolNative ?? "",
                                                                           currencyCode: viewModel.sellCurrency?.model.code ?? ""))
-                            .padding(.leading, -8)
-                        }
-                    }
-                    .padding(.top, -32)
-                    
-                    //Swap
-                    HStack(alignment: .center) {
-                        Button(action: {
-                            viewModel.swapCurrencies()
-                        }) {
-                            if viewModel.sellCurrency != nil && viewModel.buyCurrency != nil {
-                                Image(systemName: AppSystemImages.swapIcon.rawValue)
-                                    .resizable()
-                                    .tint(Color.cyan)
-                            }
-                        }
-                        .frame(width: 44, height: 44)
-                        .padding(.leading, 16)
-                        .padding(.top, -16)
-                        .padding(.bottom, -16)
-                        
-                        Spacer()
-                        Text(viewModel.exchangeRate)
-                            .font(.system(size: 20, weight: .semibold))
-                        Spacer()
-                    }
-                    
-                    //Buy
-                    VStack(spacing: 0) {
-                        HStack(spacing: 4) {
-                            Button {
-                                viewModel.showCurrencyList(for: .buy)
-                            } label: {
-                                if viewModel.buyCurrency == nil {
-                                    Image(systemName: AppSystemImages.addCurrencyIcon.rawValue)
-                                        .resizable()
-                                        .tint(.cyan)
-                                        .frame(width: 32, height: 32)
+                                .toolbar {
+                                    ToolbarItemGroup(placement: .keyboard) {
+                                        Spacer()
+                                        Button("Done") {
+                                            hideKeyboard()
+                                        }
+                                    }
                                 }
-                                Text(viewModel.buyCurrency?.model.code ?? "")
-                                    .foregroundStyle(.black)
-                                    .font(.system(size: 20))
+                                .padding(.leading, -8)
                             }
-                            .padding(.leading)
-                            .frame(minWidth: 50)
+                        }
+                        .padding(.top, -32)
+                        
+                        //Swap
+                        HStack(alignment: .center) {
+                            Button(action: {
+                                viewModel.swapCurrencies()
+                            }) {
+                                if viewModel.sellCurrency != nil && viewModel.buyCurrency != nil {
+                                    Image(systemName: AppSystemImages.swapIcon.rawValue)
+                                        .resizable()
+                                        .tint(Color.cyan)
+                                }
+                            }
+                            .frame(width: 44, height: 44)
+                            .padding(.leading, 16)
+                            .padding(.top, -16)
+                            .padding(.bottom, -16)
                             
-                            CCTextField(model: TextFieldCurrencyModel(placeholder: "Your recieve",
-                                                                      value: $viewModel.buyAmount,
-                                                                      systemImageName: AppSystemImages.buyIcon.rawValue,
-                                                                      currencySymbol: viewModel.buyCurrency?.model.symbolNative ?? "",
-                                                                      currencyCode: viewModel.buyCurrency?.model.code ?? ""))
-                            .padding(.leading, -8)
+                            Spacer()
+                            Text(viewModel.exchangeRate)
+                                .font(.system(size: 20, weight: .semibold))
+                            Spacer()
                         }
                         
-                        HStack(spacing: 0) {
-                            Spacer()
-                            Text(viewModel.buyCurrency?.model.namePlural ?? "")
-                                .font(.system(size: 16))
-                                .padding(.trailing)
+                        //Buy
+                        VStack(spacing: 0) {
+                            HStack(spacing: 4) {
+                                Button {
+                                    viewModel.showCurrencyList(for: .buy)
+                                } label: {
+                                    if viewModel.buyCurrency == nil {
+                                        Image(systemName: AppSystemImages.addCurrencyIcon.rawValue)
+                                            .resizable()
+                                            .tint(.cyan)
+                                            .frame(width: 32, height: 32)
+                                    }
+                                    Text(viewModel.buyCurrency?.model.code ?? "")
+                                        .foregroundStyle(.black)
+                                        .font(.system(size: 20))
+                                }
+                                .padding(.leading)
+                                .frame(minWidth: 50)
+                                
+                                CCTextField(model: TextFieldCurrencyModel(placeholder: "Your recieve",
+                                                                          value: $viewModel.buyAmount,
+                                                                          systemImageName: AppSystemImages.buyIcon.rawValue,
+                                                                          currencySymbol: viewModel.buyCurrency?.model.symbolNative ?? "",
+                                                                          currencyCode: viewModel.buyCurrency?.model.code ?? ""))
+                                .padding(.leading, -8)
+                            }
+                            
+                            HStack(spacing: 0) {
+                                Spacer()
+                                Text(viewModel.buyCurrency?.model.namePlural ?? "")
+                                    .font(.system(size: 16))
+                                    .padding(.trailing)
+                            }
                         }
+                        
+                        Spacer()
+                        //TODO: Set the correct date
+                        Text("Current rate as of 13:22 | 24.06.2025")
                     }
-                    
-                    Spacer()
-                    //TODO: Set the correct date
-                    Text("Current rate as of 13:22 | 24.06.2025")
                 }
             }
-        }
-        .sheet(isPresented: $viewModel.isShownCurrencyList) {
-            List(viewModel.availableСurrencies, id: \.self,) {
-                CurrencyRowView(code: $0.model.code,
-                                symbol: $0.model.symbolNative,
-                                name: $0.model.name) { code in
-                    viewModel.didSelectModel(code: code)
+            .sheet(isPresented: $viewModel.isShownCurrencyList) {
+                List(viewModel.availableСurrencies, id: \.self,) {
+                    CurrencyRowView(code: $0.model.code,
+                                    symbol: $0.model.symbolNative,
+                                    name: $0.model.name) { code in
+                        viewModel.didSelectModel(code: code)
+                    }
                 }
             }
-        }
-    }
-        .onTapGesture { pGestureState in
-            hideKeyboard()
         }
         .onAppear {
             viewModel.didLoad()
         }
-}
+    }
 }
 
 #Preview {
